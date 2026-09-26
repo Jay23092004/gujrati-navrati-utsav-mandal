@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum AdminStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REJECTED
+}
+
+enum PaymentStatus {
+  NOT_APPLICABLE
+  PENDING
+  PAID
+  REFUNDED
+}
+
+enum ContentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Admin {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  passwordHash  String
+  role          AdminRole   @default(ADMIN)
+  status        AdminStatus @default(ACTIVE)
+  lastLogin     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  activityLogs  ActivityLog[]
+
+  @@map("admins")
+}
+
+model Event {
+  id                  String        @id @default(cuid())
+  title               String
+  slug                String        @unique
+  description         String?
+  ageGroup             String?
+  registrationFee      Decimal?      @db.Decimal(10, 2)
+  eventDate           DateTime
+  startTime           String?
+  endTime             String?
+  venue               String?
+  imageUrl            String?
+  registrationEnabled Boolean       @default(true)
+  status              EventStatus   @default(DRAFT)
+  displayOrder        Int           @default(0)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  registrations       Registration[]
+
+  @@map("events")
+}
+
+model Registration {
+  id                  String              @id @default(cuid())
+  registrationNumber  String              @unique
+  eventId             String
+  event               Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fullName            String
+  mobile              String
+  email               String?
+  age                 Int?
+  gender              String?
+  city                String?
+  participants        Int                 @default(1)
+  paymentStatus       PaymentStatus       @default(NOT_APPLICABLE)
+  registrationStatus  RegistrationStatus  @default(PENDING)
+  remarks             String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([eventId])
+  @@index([registrationStatus])
+  @@index([mobile])
+  @@map("registrations")
+}
+
+model Gallery {
+  id            String        @id @default(cuid())
+  title         String
+  imageUrl      String
+  description   String?
+  displayOrder  Int           @default(0)
+  status        ContentStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("gallery")
+}
+
+model Sponsor {
+  id            String        @id @default(cuid())
+  name          String
+  logoUrl       String?
+  category      String?
+  websiteUrl    String?
+  description   String?
+  displayOrder  Int           @default(0)
+  status        ContentStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("sponsors")
+}
+
+model Announcement {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  publishDate   DateTime      @default(now())
+  expiryDate    DateTime?
+  priority      Int           @default(0)
+  status        ContentStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("announcements")
+}
+
+model ContactMessage {
+  id          String    @id @default(cuid())
+  name        String
+  mobile      String?
+  email       String?
+  subject     String?
+  message     String
+  status      String    @default("new")
+  adminNotes  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("contact_messages")
+}
+
+model WebsiteSettings {
+  id            Int      @id @default(1)
+  siteName      String   @default("Navratri Utsav")
+  logoUrl       String?
+  faviconUrl    String?
+  heroTitle     String?
+  heroSubtitle  String?
+  eventDate     String?
+  venue         String?
+  phone         String?
+  email         String?
+  address       String?
+  facebookUrl   String?
+  instagramUrl  String?
+  youtubeUrl    String?
+  mapUrl        String?
+  footerText    String?
+  updatedAt     DateTime @updatedAt
+
+  @@map("website_settings")
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  adminId     String?
+  admin       Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action      String
+  entityType  String?
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}

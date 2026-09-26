@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --maroon: #5c0a1e;
+  --pink: #d9247e;
+  --gold: #c8951f;
+  --cream: #fff8f0;
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--maroon);
+}
+
+.btn-primary {
+  @apply inline-block rounded-full bg-pink px-6 py-2.5 font-sans font-semibold text-white transition hover:bg-maroon;
+}
+
+.card {
+  @apply rounded-2xl border border-gold/20 bg-white p-5 shadow-sm;
+}
+
+.section-title {
+  @apply font-display text-2xl font-bold text-maroon md:text-3xl;
+}
